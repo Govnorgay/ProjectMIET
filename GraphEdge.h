@@ -16,10 +16,11 @@ private:
     QPointF computeTopLeftGridPoint(const QPointF &pointP);
 
     QList<QPointF> m_points;
-    QRectF m_boundingRect = QRectF(-30, -30, 50, 50);
+    QRectF m_boundingRect;
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     QVariant itemChange(GraphicsItemChange change, const QVariant &value);
 private:
     QPointF offset;
+    QString EdgeName;
 };

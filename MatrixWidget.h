@@ -1,21 +1,18 @@
 #pragma once
 #include <QGraphicsView>
 #include <QTableWidget>
-#include <QSpinBox>
-#include <QGridLayout>
 #include <QHeaderView>
+#include <QVBoxLayout>
 
 class MatrixWidget : public QWidget
 {
-    Q_OBJECT
-
-    QGridLayout*  mainLayout;
-    QSpinBox*     rowOfMatrixBox;
-    QSpinBox*     columnOfMatrixBox;
-    QTableWidget* matrix;
+    Q_OBJECT  
 
 public:
     MatrixWidget(QWidget *parent = nullptr);
+    QTableWidget* matrix;
+    QVBoxLayout* layout;
+    QPair<int, int> getMatrixRelations();
     ~MatrixWidget();
 private:
     void init();

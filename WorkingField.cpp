@@ -1,5 +1,8 @@
 #include <WorkingField.h>
+#include <QGraphicsTextItem>
 #include <QApplication>
+#include <mainwindow.h>
+#include <cmath>
 
 WorkingField::WorkingField(QWidget *parent) : QGraphicsView(parent){
 
@@ -30,6 +33,8 @@ void WorkingField::wheelEvent(QWheelEvent *we){
     else
         QGraphicsView::wheelEvent(we);
 
+    update();
+
 }
 
 void WorkingField::updateScale(const qreal& factor, const QPoint& pos){
@@ -40,6 +45,7 @@ void WorkingField::updateScale(const qreal& factor, const QPoint& pos){
 
     QPointF p2 = mapToScene(pos);
     translate(p2.x() - p1.x(), p2.y() - p1.y());
+    update();
 }
 
 void WorkingField::addEdgeSlot(bool){
@@ -47,4 +53,85 @@ void WorkingField::addEdgeSlot(bool){
     rectItem1->setPos(50,50);
     rectItem1->setBrush(Qt::darkCyan);
     _scene->addItem(rectItem1);
+    _edgesPair.first = rectItem1->pos();
+    _edgesPair.second = rectItem1;
+    _edgesVector.push_back(_edgesPair);
+}
+
+void WorkingField::clearAllSlot(bool){
+    _scene->clear();
+    _edgesVector.clear();
+}
+
+void WorkingField::setMatrixInfo(std::vector<std::vector<int>> matrix) {
+    matrixInfo = matrix;
+}
+
+void WorkingField::setGraphSlot(bool) {
+    if (rowCount != columnCount)
+        return;
+    clearAllSlot(true);
+
+    // Радиус окружности
+    double radius = 200.0;
+
+    // Центр окружности
+    QPointF center(50, 50); // Можете изменить на нужные координаты
+
+    // Угловой шаг между элементами
+    double angleStep = (2 * M_PI) / columnCount; // 2 * M_PI — это полный круг (360 градусов)
+
+    for (int i = 0; i < columnCount; i++) {
+        // Вычисляем угол для текущего элемента
+        double angle = i * angleStep;
+
+        // Вычисляем координаты элемента
+        double x = center.x() + radius * std::cos(angle);
+        double y = center.y() + radius * std::sin(angle);
+
+        // Создаем элемент
+        CustomRectItem* rectItem1 = new CustomRectItem(0, 0, 60, 60);
+        QGraphicsTextItem* rectItemText1 = new QGraphicsTextItem(QString("Item %1").arg(i), rectItem1);
+
+        QRectF rect = rectItem1->boundingRect(); // Получаем размеры прямоугольника
+        QRectF textRect = rectItemText1->boundingRect(); // Получаем размеры текста
+        rectItemText1->setPos(rect.center() - textRect.center()); // Центрируем текст
+
+        rectItem1->setPos(x, y); // Устанавливаем позицию
+        rectItem1->setBrush(Qt::darkCyan);
+        _scene->addItem(rectItem1);
+
+        // Сохраняем позицию и элемент
+        _edgesPair.first = rectItem1->pos();
+        _edgesPair.second = rectItem1;
+        _edgesVector.push_back(_edgesPair);
+    }
+
+    // Отрисовка линий
+    for (int i = 0; i < columnCount; i++) {
+        for (int j = 0; j < rowCount; j++) {
+            if (matrixInfo.at(i).at(j) == 1) {
+                auto rect1 = _edgesVector.at(i).second;
+                auto rect2 = _edgesVector.at(j).second;
+
+                // Получаем координаты центров элементов относительно сцены
+                QPointF center1 = rect1->mapToScene(rect1->boundingRect().center());
+                QPointF center2 = rect2->mapToScene(rect2->boundingRect().center());
+
+                // Создаем линию
+                QLineF line(center1, center2);
+                QGraphicsLineItem* lineItem = new QGraphicsLineItem(line);
+
+                // Настраиваем линию
+                QPen pen(Qt::black); // Цвет линии
+                pen.setWidth(2); // Толщина линии
+                lineItem->setPen(pen);
+
+                lineItem->setZValue(1);
+
+                // Добавляем линию на сцену
+                _scene->addItem(lineItem);
+            }
+        }
+    }
 }

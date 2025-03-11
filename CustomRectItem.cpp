@@ -20,6 +20,7 @@ CustomRectItem::CustomRectItem(qreal x, qreal y, qreal w, qreal h, QGraphicsItem
 void CustomRectItem::mousePressEvent(QGraphicsSceneMouseEvent *event){
     offset = pos() - computeTopLeftGridPoint(pos());
     QGraphicsEllipseItem::mousePressEvent(event);
+    update();
 }
 
 QVariant CustomRectItem::itemChange(GraphicsItemChange change,
@@ -45,4 +46,27 @@ QPointF CustomRectItem::computeTopLeftGridPoint(const QPointF& pointP){
     qreal xV = floor(pointP.x()/gridSize)*gridSize;
     qreal yV = floor(pointP.y()/gridSize)*gridSize;
     return QPointF(xV, yV);
+}
+
+QRectF CustomRectItem::boundingRect() const
+{
+    return m_boundingRect;
+}
+
+void CustomRectItem::updateBoundingRect() {
+    if (m_points.empty()) return;
+
+    qreal minX = m_points[0].x();
+    qreal minY = m_points[0].y();
+    qreal maxX = minX;
+    qreal maxY = minY;
+
+    for (const auto& point : m_points) {
+        if (point.x() < minX) minX = point.x();
+        if (point.y() < minY) minY = point.y();
+        if (point.x() > maxX) maxX = point.x();
+        if (point.y() > maxY) maxY = point.y();
+    }
+
+    m_boundingRect = QRectF(minX, minY, maxX - minX, maxY - minY);
 }

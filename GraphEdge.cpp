@@ -8,6 +8,7 @@ GraphEdge::GraphEdge(const QRect& rect, QGraphicsItem* parent):
     setFlags(QGraphicsItem::ItemIsSelectable |
             QGraphicsItem::ItemIsMovable |
             QGraphicsItem::ItemSendsGeometryChanges);
+
 }
 
 GraphEdge::~GraphEdge(){}

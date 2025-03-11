@@ -8,6 +8,7 @@
 #include <QTextEdit>
 #include <MatrixWidget.h>
 #include <QGroupBox>
+#include <QSpinBox>
 
 
 class MainWindow : public QMainWindow
@@ -16,20 +17,27 @@ class MainWindow : public QMainWindow
 
     QGridLayout*  mainLayout;
     QVBoxLayout*  toolLayout;
-
+    QGridLayout*  matrixLayout;
+    MatrixWidget* matrixWidget;
     WorkingField* workField;
     QPushButton*  loadBtn;
     QPushButton*  startAlgBtn1;
     QPushButton*  startAlgBtn2;
-    MatrixWidget* matrixWidget;
     QPushButton*  setMatrixBtn;
     QPushButton*  addEdgeBtn;
-    QGroupBox*  toolWindow;
+    QPushButton*  removeGraphBtn;
+    QGroupBox*    toolWindow;
+    QSpinBox*     rowOfMatrixBox;
+    QSpinBox*     columnOfMatrixBox;
 
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 private:
     void init();
+    std::vector<std::vector<int>>getMatrixFromTable();
+private slots:
+    void transferMatrixSlot(bool);
+
 };
 

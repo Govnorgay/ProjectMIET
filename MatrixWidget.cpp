@@ -10,29 +10,23 @@ MatrixWidget::~MatrixWidget()
 }
 
 void MatrixWidget::init(){
-    mainLayout = new QGridLayout;
 
-    rowOfMatrixBox = new QSpinBox;
-    columnOfMatrixBox = new QSpinBox;
+    layout = new QVBoxLayout;
 
-    rowOfMatrixBox->setValue(3);
-    columnOfMatrixBox->setValue(3);
-
-    matrix = new QTableWidget(3, 3);
+    matrix = new QTableWidget;
     matrix->setSelectionBehavior(QAbstractItemView::SelectRows);
     matrix->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     matrix->setSelectionMode(QAbstractItemView::ExtendedSelection);
     matrix->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
 
-    mainLayout->addWidget(rowOfMatrixBox,    0, 0);
-    mainLayout->addWidget(columnOfMatrixBox, 0, 1);
-    mainLayout->addWidget(matrix,            1, 0, 1, 2);
+    layout->addWidget(matrix);
 
+    this->setLayout(layout);
 
-    connect(rowOfMatrixBox,    SIGNAL(valueChanged(int)), this, SLOT(rowChangedSlot(int)));
-    connect(columnOfMatrixBox, SIGNAL(valueChanged(int)), this, SLOT(columnChangedSlot(int)));
+}
 
-    setLayout(mainLayout);
+QPair<int,int> MatrixWidget::getMatrixRelations(){
+
 }
 
 void MatrixWidget::rowChangedSlot(int rows){

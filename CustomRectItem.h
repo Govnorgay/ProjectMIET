@@ -16,5 +16,10 @@ protected:
     const QVariant &value);
 private:
     QPointF offset;
+    QList<QPointF> m_points;
+    QRectF m_boundingRect = QRectF(0, 0, 60, 60);
     QPointF computeTopLeftGridPoint(const QPointF &pointP);
+    void updateBoundingRect();
+public:
+    QRectF boundingRect() const;
 };

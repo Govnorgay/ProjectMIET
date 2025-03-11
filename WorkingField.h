@@ -2,10 +2,14 @@
 
 #include <QGraphicsView>
 #include "CustomRectItem.h"
+#include <QTableWidget>
 #include <QGraphicsItem>
 #include "Scene.h"
 #include <QMouseEvent>
-#include <QMap>
+#include <QVector>
+#include <QPair>
+
+class GraphEdge;
 
 class WorkingField : public QGraphicsView{
     Q_OBJECT
@@ -22,6 +26,12 @@ private:
     QTransform _defaultTransform;
     QPoint     _currentPos;
     QPointF     _previousPos;
+    QPair<QPointF, CustomRectItem*> _edgesPair;
+    QVector<QPair<QPointF, CustomRectItem*>> _edgesVector;
+    std::vector<std::vector<int>> matrixInfo;
+
+    int rowCount = 0;
+    int columnCount = 0;
 
     bool _isMoving = false;
     int _panStartX;
@@ -34,6 +44,14 @@ private:
     void updateScale(const qreal& factor, const QPoint& pos);   
 public slots:
     void addEdgeSlot(bool);
+    void clearAllSlot(bool);
+    void setGraphSlot(bool);
+    void setRowsCountSlot(int rows){ rowCount = rows;}
+    void setColoumnCountSlot(int column){ columnCount = column;}
+
+ public:
+    void setMatrixInfo(std::vector<std::vector<int>> matrix);
+
 
 };
 
