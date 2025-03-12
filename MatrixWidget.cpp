@@ -25,10 +25,6 @@ void MatrixWidget::init(){
 
 }
 
-QPair<int,int> MatrixWidget::getMatrixRelations(){
-
-}
-
 void MatrixWidget::rowChangedSlot(int rows){
     matrix->setRowCount(rows);
 }

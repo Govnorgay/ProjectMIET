@@ -12,7 +12,6 @@ public:
     MatrixWidget(QWidget *parent = nullptr);
     QTableWidget* matrix;
     QVBoxLayout* layout;
-    QPair<int, int> getMatrixRelations();
     ~MatrixWidget();
 private:
     void init();

@@ -1,5 +1,6 @@
 #include <WorkingField.h>
 #include <QGraphicsTextItem>
+#include "CustomLineItem.h"
 #include <QApplication>
 #include <mainwindow.h>
 #include <cmath>
@@ -91,13 +92,13 @@ void WorkingField::setGraphSlot(bool) {
 
         // Создаем элемент
         CustomRectItem* rectItem1 = new CustomRectItem(0, 0, 60, 60);
-        QGraphicsTextItem* rectItemText1 = new QGraphicsTextItem(QString("Item %1").arg(i), rectItem1);
+        QGraphicsTextItem* rectItemText1 = new QGraphicsTextItem(QString("Item %1").arg(i + 1), rectItem1);
 
-        QRectF rect = rectItem1->boundingRect(); // Получаем размеры прямоугольника
-        QRectF textRect = rectItemText1->boundingRect(); // Получаем размеры текста
-        rectItemText1->setPos(rect.center() - textRect.center()); // Центрируем текст
+        QRectF rect = rectItem1->boundingRect();
+        rectItemText1->setFont(QFont("Times", 10, QFont::Bold));
+        rectItemText1->setPos((rect.center().x() - 20), rect.center().y() - 60);
 
-        rectItem1->setPos(x, y); // Устанавливаем позицию
+        rectItem1->setPos(x, y);
         rectItem1->setBrush(Qt::darkCyan);
         _scene->addItem(rectItem1);
 
@@ -120,15 +121,11 @@ void WorkingField::setGraphSlot(bool) {
 
                 // Создаем линию
                 QLineF line(center1, center2);
-                QGraphicsLineItem* lineItem = new QGraphicsLineItem(line);
-
-                // Настраиваем линию
-                QPen pen(Qt::black); // Цвет линии
-                pen.setWidth(2); // Толщина линии
-                lineItem->setPen(pen);
+                CustomLineItem* lineItem = new CustomLineItem(line);
 
                 lineItem->setZValue(1);
-
+                rect1->setLineItem(lineItem, true);
+                rect2->setLineItem(lineItem, false);
                 // Добавляем линию на сцену
                 _scene->addItem(lineItem);
             }

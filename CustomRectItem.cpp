@@ -1,14 +1,5 @@
 #include "CustomRectItem.h"
 
-//CustomRectItem::CustomRectItem(const QRect& rect, QGraphicsItem* parent):
-//    QGraphicsRectItem(rect, parent)
-//{
-//    setFlags(QGraphicsItem::ItemIsSelectable |
-//            QGraphicsItem::ItemIsMovable |
-//            QGraphicsItem::ItemSendsGeometryChanges);
-//}
-
-
 CustomRectItem::CustomRectItem(qreal x, qreal y, qreal w, qreal h, QGraphicsItem *parent)
     :QGraphicsEllipseItem(x, y, w, h, parent)
 {
@@ -26,8 +17,9 @@ void CustomRectItem::mousePressEvent(QGraphicsSceneMouseEvent *event){
 QVariant CustomRectItem::itemChange(GraphicsItemChange change,
 const QVariant &value)
 {
-    if (change == ItemPositionChange && scene()) {
+    if (change == ItemPositionChange) {
         QPointF newPos = value.toPointF();
+        updateLinePosition();
         if(QApplication::mouseButtons() == Qt::LeftButton &&
             qobject_cast<Scene*> (scene())){
                 QPointF closestPoint = computeTopLeftGridPoint(newPos);
@@ -38,6 +30,30 @@ const QVariant &value)
     }
     else
         return QGraphicsItem::itemChange(change, value);
+}
+
+void CustomRectItem::setLineItem(CustomLineItem *item, bool isStart){
+    QPair<CustomLineItem*, bool> pair;
+    pair.first = item;
+    pair.second = isStart;
+    lines.push_back(pair);
+}
+
+void CustomRectItem::updateLinePosition(){
+    QPointF center = mapToScene(rect().center());
+
+    for (const auto& lineInfo : lines) {
+        QGraphicsLineItem* lineItem = lineInfo.first;
+        bool isStartPoint = lineInfo.second;
+
+        QLineF line = lineItem->line();
+        if (isStartPoint) {
+            line.setP1(center); // Обновляем начальную точку линии
+        } else {
+            line.setP2(center); // Обновляем конечную точку линии
+        }
+        lineItem->setLine(line);
+    }
 }
 
 QPointF CustomRectItem::computeTopLeftGridPoint(const QPointF& pointP){
