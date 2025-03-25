@@ -1,18 +1,21 @@
 #pragma once
 
-#include <QGraphicsRectItem>
 #include <QGraphicsEllipseItem>
+#include <QGraphicsSceneMouseEvent>
 #include "CustomLineItem.h"
 #include "Scene.h"
 #include "math.h"
 
-class CustomRectItem : public QGraphicsEllipseItem
+class CustomEclipseItem : public QGraphicsEllipseItem
 {
-    QList<QPair<QGraphicsLineItem*, bool>> lines;
+    QList<QPair<CustomLineItem*, bool>> lines;
+    QVector<CustomEclipseItem*> neighborsItems;
+    QString itemName;
 public:
-    explicit CustomRectItem(qreal x, qreal y, qreal w, qreal h, QGraphicsItem *parent = Q_NULLPTR);
+    explicit CustomEclipseItem(qreal x, qreal y, qreal w, qreal h, QGraphicsItem *parent = Q_NULLPTR);
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
+    void mouseDoubleClickEvent(QGraphicsSceneMouseEvent * event);
     QVariant itemChange(GraphicsItemChange change,
     const QVariant &value);
 private:
@@ -25,5 +28,9 @@ private:
     void updateLinePosition();
 public:
     void setLineItem(CustomLineItem* item, bool isStart);
+    void setItemName(QString name){itemName = name;}
+    void addNeighbor(CustomEclipseItem* eclipseItem);
+    QVector<CustomEclipseItem*> getNeighbors() {return neighborsItems;}
+    QString getItemName(){ return itemName;}
     QRectF boundingRect() const;
 };

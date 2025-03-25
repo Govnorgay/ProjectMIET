@@ -1,29 +1,30 @@
-#include "CustomRectItem.h"
+#include "CustomEclipseItem.h"
 
-CustomRectItem::CustomRectItem(qreal x, qreal y, qreal w, qreal h, QGraphicsItem *parent)
+CustomEclipseItem::CustomEclipseItem(qreal x, qreal y, qreal w, qreal h, QGraphicsItem *parent)
     :QGraphicsEllipseItem(x, y, w, h, parent)
 {
     setFlags(QGraphicsItem::ItemIsSelectable |
                 QGraphicsItem::ItemIsMovable |
                 QGraphicsItem::ItemSendsGeometryChanges);
+
+    m_boundingRect = QRectF(x, y, w, h);
 }
 
-void CustomRectItem::mousePressEvent(QGraphicsSceneMouseEvent *event){
+void CustomEclipseItem::mousePressEvent(QGraphicsSceneMouseEvent* event){
     offset = pos() - computeTopLeftGridPoint(pos());
     QGraphicsEllipseItem::mousePressEvent(event);
-    update();
 }
 
-QVariant CustomRectItem::itemChange(GraphicsItemChange change,
+QVariant CustomEclipseItem::itemChange(GraphicsItemChange change,
 const QVariant &value)
 {
-    if (change == ItemPositionChange) {
+    if (change == ItemPositionChange && scene()) {
         QPointF newPos = value.toPointF();
         updateLinePosition();
         if(QApplication::mouseButtons() == Qt::LeftButton &&
             qobject_cast<Scene*> (scene())){
                 QPointF closestPoint = computeTopLeftGridPoint(newPos);
-                return closestPoint+=offset;
+                return closestPoint;
             }
         else
             return newPos;
@@ -32,18 +33,15 @@ const QVariant &value)
         return QGraphicsItem::itemChange(change, value);
 }
 
-void CustomRectItem::setLineItem(CustomLineItem *item, bool isStart){
-    QPair<CustomLineItem*, bool> pair;
-    pair.first = item;
-    pair.second = isStart;
-    lines.push_back(pair);
+void CustomEclipseItem::setLineItem(CustomLineItem *item, bool isStart){
+    lines.push_back(qMakePair(item, isStart));
 }
 
-void CustomRectItem::updateLinePosition(){
+void CustomEclipseItem::updateLinePosition(){
     QPointF center = mapToScene(rect().center());
 
     for (const auto& lineInfo : lines) {
-        QGraphicsLineItem* lineItem = lineInfo.first;
+        CustomLineItem* lineItem = lineInfo.first;
         bool isStartPoint = lineInfo.second;
 
         QLineF line = lineItem->line();
@@ -53,10 +51,11 @@ void CustomRectItem::updateLinePosition(){
             line.setP2(center); // Обновляем конечную точку линии
         }
         lineItem->setLine(line);
+        lineItem->getLineText()->setPos( (line.x1() + line.x2()) / 2, (line.y1() + line.y2()) / 2);
     }
 }
 
-QPointF CustomRectItem::computeTopLeftGridPoint(const QPointF& pointP){
+QPointF CustomEclipseItem::computeTopLeftGridPoint(const QPointF& pointP){
     Scene* customScene = qobject_cast<Scene*> (scene());
     int gridSize = customScene->getGridSize();
     qreal xV = floor(pointP.x()/gridSize)*gridSize;
@@ -64,13 +63,16 @@ QPointF CustomRectItem::computeTopLeftGridPoint(const QPointF& pointP){
     return QPointF(xV, yV);
 }
 
-QRectF CustomRectItem::boundingRect() const
+QRectF CustomEclipseItem::boundingRect() const
 {
     return m_boundingRect;
 }
 
-void CustomRectItem::updateBoundingRect() {
-    if (m_points.empty()) return;
+void CustomEclipseItem::updateBoundingRect() {
+    if (m_points.empty()){
+        m_boundingRect = rect();
+        return;
+    }
 
     qreal minX = m_points[0].x();
     qreal minY = m_points[0].y();
@@ -85,4 +87,13 @@ void CustomRectItem::updateBoundingRect() {
     }
 
     m_boundingRect = QRectF(minX, minY, maxX - minX, maxY - minY);
+}
+
+void CustomEclipseItem::addNeighbor(CustomEclipseItem *eclipseItem){
+    if(!neighborsItems.contains(eclipseItem))
+        neighborsItems.push_back(eclipseItem);
+}
+
+void CustomEclipseItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event){
+
 }

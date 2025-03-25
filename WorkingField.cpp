@@ -1,9 +1,14 @@
 #include <WorkingField.h>
 #include <QGraphicsTextItem>
-#include "CustomLineItem.h"
+#include <CustomLineItem.h>
 #include <QApplication>
 #include <mainwindow.h>
 #include <cmath>
+#include <limits>
+#include <queue>
+#include <unordered_map>
+#include <QDebug>
+#include <QThread>
 
 WorkingField::WorkingField(QWidget *parent) : QGraphicsView(parent){
 
@@ -50,7 +55,7 @@ void WorkingField::updateScale(const qreal& factor, const QPoint& pos){
 }
 
 void WorkingField::addEdgeSlot(bool){
-    CustomRectItem* rectItem1 = new CustomRectItem(0, 0, 60, 60);
+    CustomEclipseItem* rectItem1 = new CustomEclipseItem(0, 0, 60, 60);
     rectItem1->setPos(50,50);
     rectItem1->setBrush(Qt::darkCyan);
     _scene->addItem(rectItem1);
@@ -64,7 +69,7 @@ void WorkingField::clearAllSlot(bool){
     _edgesVector.clear();
 }
 
-void WorkingField::setMatrixInfo(std::vector<std::vector<int>> matrix) {
+void WorkingField::setMatrixInfo(std::vector<std::vector<int>> matrix) {  
     matrixInfo = matrix;
 }
 
@@ -73,14 +78,12 @@ void WorkingField::setGraphSlot(bool) {
         return;
     clearAllSlot(true);
 
-    // Радиус окружности
-    double radius = 200.0;
+    double radius = 25.0 * columnCount;
 
-    // Центр окружности
-    QPointF center(50, 50); // Можете изменить на нужные координаты
+    QPointF center(50, 50);
 
     // Угловой шаг между элементами
-    double angleStep = (2 * M_PI) / columnCount; // 2 * M_PI — это полный круг (360 градусов)
+    double angleStep = (2 * M_PI) / columnCount;
 
     for (int i = 0; i < columnCount; i++) {
         // Вычисляем угол для текущего элемента
@@ -91,15 +94,16 @@ void WorkingField::setGraphSlot(bool) {
         double y = center.y() + radius * std::sin(angle);
 
         // Создаем элемент
-        CustomRectItem* rectItem1 = new CustomRectItem(0, 0, 60, 60);
-        QGraphicsTextItem* rectItemText1 = new QGraphicsTextItem(QString("Item %1").arg(i + 1), rectItem1);
+        CustomEclipseItem* rectItem1 = new CustomEclipseItem(0, 0, 60, 60);
+        QGraphicsTextItem* rectItemText1 = new QGraphicsTextItem(QString("Item%1").arg(i + 1), rectItem1);
+        rectItem1->setItemName(QString("Item%1").arg(i + 1));
 
         QRectF rect = rectItem1->boundingRect();
         rectItemText1->setFont(QFont("Times", 10, QFont::Bold));
         rectItemText1->setPos((rect.center().x() - 20), rect.center().y() - 60);
 
         rectItem1->setPos(x, y);
-        rectItem1->setBrush(Qt::darkCyan);
+        rectItem1->setBrush(Qt::red);
         _scene->addItem(rectItem1);
 
         // Сохраняем позицию и элемент
@@ -111,7 +115,7 @@ void WorkingField::setGraphSlot(bool) {
     // Отрисовка линий
     for (int i = 0; i < columnCount; i++) {
         for (int j = 0; j < rowCount; j++) {
-            if (matrixInfo.at(i).at(j) == 1) {
+            if (matrixInfo.at(i).at(j) != 0) {
                 auto rect1 = _edgesVector.at(i).second;
                 auto rect2 = _edgesVector.at(j).second;
 
@@ -122,8 +126,15 @@ void WorkingField::setGraphSlot(bool) {
                 // Создаем линию
                 QLineF line(center1, center2);
                 CustomLineItem* lineItem = new CustomLineItem(line);
+                lineItem->setWieght(matrixInfo.at(i).at(j));
 
-                lineItem->setZValue(1);
+                QGraphicsTextItem* lineWeightText = new QGraphicsTextItem(QString("%1").arg(matrixInfo.at(i).at(j)), lineItem);
+                lineWeightText->setFont(QFont("Times", 8, QFont::Bold));
+                lineWeightText->setDefaultTextColor(QColor(0, 0, 139));
+                lineWeightText->setPos((center1.x() + center2.x())/2,(center1.y() + center2.y())/2);
+                lineItem->setLineText(lineWeightText);
+                lineItem->setZValue(-1);
+
                 rect1->setLineItem(lineItem, true);
                 rect2->setLineItem(lineItem, false);
                 // Добавляем линию на сцену
@@ -131,4 +142,134 @@ void WorkingField::setGraphSlot(bool) {
             }
         }
     }
+}
+
+void WorkingField::setStartItems(QString item1, QString item2){
+    CustomEclipseItem* firstItem = nullptr;
+    CustomEclipseItem* secondItem = nullptr;
+
+    for( QPair<QPointF,CustomEclipseItem*> pair : _edgesVector) {
+        if(pair.second->getItemName() == item1)
+            firstItem = pair.second;
+
+        if(pair.second->getItemName() == item2)
+            secondItem = pair.second;
+    }
+    firstLastItems = qMakePair(firstItem, secondItem);
+}
+
+void WorkingField::setNeighbors(){
+    for(int vectorPos = 0; vectorPos < _edgesVector.size(); vectorPos++) {
+        for(int i = 0; i < matrixInfo[vectorPos].size();  i++){
+            _edgesVector[vectorPos].second->setBrush(Qt::red);
+            if(matrixInfo[vectorPos][i])
+                _edgesVector[vectorPos].second->addNeighbor(_edgesVector[i].second);
+        }
+
+    }
+}
+void WorkingField::startDeicstraAlgo(bool) {
+    setNeighbors(); // Убедимся, что соседи установлены
+
+    CustomEclipseItem* startItem = firstLastItems.first;
+    CustomEclipseItem* endItem = firstLastItems.second;
+
+    if (!startItem || !endItem)
+        return;
+
+
+    // Структура для хранения расстояний
+    std::unordered_map<CustomEclipseItem*, double> distances;
+    // Структура для хранения предшественников
+    std::unordered_map<CustomEclipseItem*, CustomEclipseItem*> predecessors;
+
+    // Инициализация расстояний
+    for (const auto& pair : _edgesVector) {
+        distances[pair.second] = std::numeric_limits<double>::infinity();
+    }
+    distances[startItem] = 0;
+
+    // Приоритетная очередь для выбора вершины с минимальным расстоянием
+    auto compare = [&](CustomEclipseItem* a, CustomEclipseItem* b) {
+        return distances[a] > distances[b];
+    };
+    std::priority_queue<CustomEclipseItem*, std::vector<CustomEclipseItem*>, decltype(compare)> queue(compare);
+    queue.push(startItem);
+
+    // Основной цикл алгоритма Дейкстры
+    while (!queue.empty()) {
+        CustomEclipseItem* current = queue.top();
+        queue.pop();
+
+        // Если достигли конечной вершины, завершаем алгоритм
+        if (current == endItem) {
+            break;
+        }
+
+        // Обновляем расстояния до всех соседей
+        for (auto& neighbor : current->getNeighbors()) {
+            double weight = getWeight(current, neighbor); // Получаем вес ребра
+            double newDistance = distances[current] + weight;
+
+            if (newDistance < distances[neighbor]) {
+                distances[neighbor] = newDistance;
+                predecessors[neighbor] = current;
+                queue.push(neighbor);
+            }
+        }
+    }
+
+    // Восстановление пути
+    if (distances[endItem] == std::numeric_limits<double>::infinity())
+        return;
+
+    std::vector<CustomEclipseItem*> path;
+    for (CustomEclipseItem* current = endItem; current != nullptr; current = predecessors[current]) {
+        path.push_back(current);
+    }
+    std::reverse(path.begin(), path.end());
+
+    // Вывод пути
+    qDebug() << "Path from" << startItem->getItemName() << "to" << endItem->getItemName() << ":";
+    for (auto item : path) {
+        qDebug() << item->getItemName();
+        item->setBrush(Qt::green);
+        delay();
+    }
+}
+
+double WorkingField::getWeight(CustomEclipseItem* from, CustomEclipseItem* to) {
+    // Находим индекс начальной и конечной вершины
+    int fromIndex = -1, toIndex = -1;
+    for (int i = 0; i < _edgesVector.size(); i++) {
+        if (_edgesVector[i].second == from) {
+            fromIndex = i;
+        }
+        if (_edgesVector[i].second == to) {
+            toIndex = i;
+        }
+    }
+
+    if (fromIndex == -1 || toIndex == -1) {
+        qDebug() << "Error: Invalid vertices!";
+        return std::numeric_limits<double>::infinity();
+    }
+
+    // Возвращаем вес ребра из матрицы смежности
+    return matrixInfo[fromIndex][toIndex];
+}
+
+QStringList WorkingField::getNodesNames(){
+    QStringList nodesNames;
+    for( QPair<QPointF,CustomEclipseItem*> pair : _edgesVector){
+        nodesNames.push_back(pair.second->getItemName());
+    }
+    return nodesNames;
+}
+
+void WorkingField::delay()
+{
+    QTime dieTime= QTime::currentTime().addMSecs(400);
+    while (QTime::currentTime() < dieTime)
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }

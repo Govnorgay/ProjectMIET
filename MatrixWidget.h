@@ -18,5 +18,6 @@ private:
 public slots:
     void rowChangedSlot(int rows);
     void columnChangedSlot(int columns);
+    void duplicateCellValue(int row, int column);
 };
 

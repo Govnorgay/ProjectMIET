@@ -8,8 +8,6 @@ Scene::Scene(QObject *parent) :
 
 void Scene::drawBackground(QPainter *painter, const QRectF &rect)
 {
-    QPen pen;
-    painter->setPen(pen);
 
     qreal left = int(rect.left()) - (int(rect.left()) % gridSize);
     qreal top = int(rect.top()) - (int(rect.top()) % gridSize);
@@ -19,5 +17,6 @@ void Scene::drawBackground(QPainter *painter, const QRectF &rect)
             points.append(QPointF(x,y));
         }
     }
+    painter->setPen(QPen(QColor(0, 0, 0)));;
     painter->drawPoints(points.data(), points.size());
 }

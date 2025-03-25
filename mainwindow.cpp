@@ -1,10 +1,12 @@
 #include "mainwindow.h"
+#include "QIcon"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     init();
     setWindowTitle("GraphVisualizator");
+    setWindowIcon(QIcon(":/RC/Vis.png"));
     resize(900, 600);
     setWindowState(Qt::WindowMaximized);
 }
@@ -21,15 +23,46 @@ void MainWindow::init(){
     toolWindow = new QGroupBox;
     workField = new WorkingField;
 
-    loadBtn = new QPushButton("Load file");
-    startAlgBtn1 = new QPushButton("Start Dyakstra");
-    startAlgBtn2 = new QPushButton("Start A*");
+    saveBtn = new QPushButton("Save");
+    loadBtn = new QPushButton(QIcon(":/RC/load.png"), "");
+    loadBtn->setToolTip("Load file");
     matrixWidget = new MatrixWidget;
     setMatrixBtn = new QPushButton("Set Graph");
-    addEdgeBtn   = new QPushButton("Add edge");
     removeGraphBtn = new QPushButton("Clear");
+    buttonGroup = new QGroupBox;
+    buttonLayout = new QHBoxLayout;
+
+    buttonLayout->addWidget(saveBtn);
+    buttonLayout->addWidget(loadBtn);
+    buttonLayout->addWidget(setMatrixBtn);
+    buttonLayout->addWidget(removeGraphBtn);
+    buttonGroup->setLayout(buttonLayout);
+
     rowOfMatrixBox = new QSpinBox;
     columnOfMatrixBox = new QSpinBox;
+
+    algFirstNode = new QComboBox;
+    algSecondNode = new QComboBox;
+    posLayout = new QHBoxLayout;
+    positionGroup = new QGroupBox;
+
+
+    algFirstNode->setPlaceholderText("Start position");
+    algSecondNode->setPlaceholderText("End position");
+
+    posLayout->addWidget(algFirstNode);
+    posLayout->addWidget(algSecondNode);
+    positionGroup->setLayout(posLayout);
+
+    startAlgBtn2 = new QPushButton("Start A*");
+    startAlgBtn1 = new QPushButton("Start Dyakstra");
+    algLayout = new QHBoxLayout;
+    algoGroup = new QGroupBox;
+
+    algLayout->addWidget(startAlgBtn1);
+    algLayout->addWidget(startAlgBtn2);
+    algoGroup->setLayout(algLayout);
+
 
     matrixLayout->addWidget(rowOfMatrixBox,    0, 0);
     matrixLayout->addWidget(columnOfMatrixBox, 0, 1);
@@ -39,28 +72,29 @@ void MainWindow::init(){
     matrix->setLayout(matrixLayout);
 
     toolLayout->setSpacing(0);
-    toolLayout->setContentsMargins(0, 0, 0, 0);
-    toolLayout->addWidget(loadBtn,  Qt::AlignTop);
-    toolLayout->addWidget(startAlgBtn1, Qt::AlignTop);
-    toolLayout->addWidget(startAlgBtn2, Qt::AlignTop);
-    toolLayout->addWidget(matrix,       Qt::AlignTop);
-    toolLayout->addWidget(addEdgeBtn, Qt::AlignTop);
-    toolLayout->addWidget(removeGraphBtn, Qt::AlignTop);
-    toolLayout->addWidget(setMatrixBtn, Qt::AlignTop);
+    toolLayout->setContentsMargins(0, 0, 0, 0);   
+    toolLayout->addWidget(positionGroup);
+    toolLayout->addWidget(algoGroup);
+    toolLayout->addWidget(matrix);
+    toolLayout->addWidget(buttonGroup);
 
     toolWindow->setLayout(toolLayout);
 
-    mainLayout->addWidget(workField,  0, 0, 1, 3);
-    mainLayout->addWidget(toolWindow, 0, 3);
+    mainLayout->addWidget(workField,  0, 0, 1, 6);
+    mainLayout->addWidget(toolWindow, 0, 6, 1, 2);
 
-    connect(addEdgeBtn, SIGNAL(clicked(bool)), workField, SLOT(addEdgeSlot(bool)));
-    connect(removeGraphBtn, SIGNAL(clicked(bool)), workField, SLOT(clearAllSlot(bool)));
+
     connect(setMatrixBtn, SIGNAL(clicked(bool)), this, SLOT(transferMatrixSlot(bool)));
     connect(setMatrixBtn,   SIGNAL(clicked(bool)), workField, SLOT(setGraphSlot(bool)));
+    connect(setMatrixBtn,   SIGNAL(clicked(bool)), this, SLOT(setNodesLists(bool)));
     connect(rowOfMatrixBox,    SIGNAL(valueChanged(int)), matrixWidget, SLOT(rowChangedSlot(int)));
     connect(columnOfMatrixBox, SIGNAL(valueChanged(int)), matrixWidget, SLOT(columnChangedSlot(int)));
     connect(rowOfMatrixBox,    SIGNAL(valueChanged(int)), workField, SLOT(setRowsCountSlot(int)));
     connect(columnOfMatrixBox, SIGNAL(valueChanged(int)), workField, SLOT(setColoumnCountSlot(int)));
+
+    connect(startAlgBtn1,   SIGNAL(clicked(bool)), this,      SLOT(setStartLastItems(bool)));
+    connect(removeGraphBtn, SIGNAL(clicked(bool)), workField, SLOT(clearAllSlot(bool)));
+    connect(startAlgBtn1, SIGNAL(clicked(bool)),   workField, SLOT(startDeicstraAlgo(bool)));
 
     QWidget *centralWidget = new QWidget(this);
     centralWidget->setLayout(mainLayout);
@@ -70,6 +104,14 @@ void MainWindow::init(){
 void MainWindow::transferMatrixSlot(bool){
     auto matrix = getMatrixFromTable();
     workField->setMatrixInfo(matrix);
+}
+
+void MainWindow::setNodesLists(bool){
+    algFirstNode->clear();
+    algSecondNode->clear();
+
+    algFirstNode->addItems(workField->getNodesNames());
+    algSecondNode->addItems(workField->getNodesNames());
 }
 
 std::vector<std::vector<int>> MainWindow::getMatrixFromTable() {
@@ -87,12 +129,16 @@ std::vector<std::vector<int>> MainWindow::getMatrixFromTable() {
             QTableWidgetItem* item = matrixWidget->matrix->item(row, col);
 
             // Если ячейка существует и её текст равен "1", записываем 1 в массив
-            if (item && item->text() == "1") {
-                matrix[row][col] = 1;
+            if (item && !item->text().isEmpty()) {
+                matrix[row][col] = item->text().toInt();
             }
             // Иначе записываем 0 (значение по умолчанию)
         }
     }
 
     return matrix;
+}
+
+void MainWindow::setStartLastItems(bool){       
+    workField->setStartItems(algFirstNode->currentText(), algSecondNode->currentText());
 }
