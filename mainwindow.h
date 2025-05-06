@@ -11,6 +11,9 @@
 #include <QGroupBox>
 #include <QComboBox>
 #include <QSpinBox>
+#include "QIcon"
+#include "QFileDialog"
+#include <QMessageBox>
 
 
 class MainWindow : public QMainWindow
@@ -49,10 +52,11 @@ private:
     void init();
     std::vector<std::vector<int>>getMatrixFromTable();
 private slots:
-    void changeButtonsValue();
     void setNodesLists(bool);
     void transferMatrixSlot(bool);
     void setStartLastItems(bool);
+    void saveMatrixToFile(bool);
+    void readMatrixFromFile(bool);
 
 };
 

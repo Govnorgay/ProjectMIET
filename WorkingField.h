@@ -14,7 +14,6 @@
 #include <limits>
 #include <queue>
 #include <QDebug>
-#include <QThread>
 
 class GraphEdge;
 
@@ -26,9 +25,11 @@ public:
     ~WorkingField(){}
 protected:
     void wheelEvent(QWheelEvent *event) override;
-
-private:
+public:
     Scene* _scene;
+    int rowCount = 0;
+    int columnCount = 0;
+private:
     QPointF    _firstSegmentPoint;
     QTransform _defaultTransform;
     QPoint     _currentPos;
@@ -37,9 +38,7 @@ private:
     QVector<QPair<QPointF, CustomEclipseItem*>> _edgesVector;
     std::vector<std::vector<int>> matrixInfo;
     QPair<CustomEclipseItem*, CustomEclipseItem*> firstLastItems;
-
-    int rowCount = 0;
-    int columnCount = 0;
+    std::vector<CustomEclipseItem*> lastFoundPath;
 
     bool _isMoving = false;
     int _panStartX;
@@ -63,12 +62,15 @@ public slots:
     void setColoumnCountSlot(int column){ columnCount = column;}
     void startDeicstraAlgo(bool);
     void startAStarAlgo(bool);
-signals:
-    void algroFinished();
+
  public:
     QStringList getNodesNames();
     void setMatrixInfo(std::vector<std::vector<int>> matrix);
     void setStartItems(QString item1, QString item2);
+    inline std::vector<CustomEclipseItem*> getLastFoundPath() const {
+        return lastFoundPath;
+    }
+
 
 };
 

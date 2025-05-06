@@ -15,6 +15,7 @@ SOURCES += \
     GraphEdge.cpp \
     MatrixWidget.cpp \
     Scene.cpp \
+    TestAlgorithms.cpp \
     WorkingField.cpp \
     main.cpp \
     mainwindow.cpp
@@ -26,6 +27,7 @@ HEADERS += \
     GraphEdge.h \
     MatrixWidget.h \
     Scene.h \
+    TestAlgorithms.h \
     WorkingField.h \
     mainwindow.h
 
@@ -47,3 +49,10 @@ RESOURCES += \
 
 SUBDIRS += \
     GraphV.pro
+
+QT += testlib widgets
+TARGET = tst_algorithms
+CONFIG += console c++17
+CONFIG -= app_bundle
+CONFIG += qt warn_on depend_includepath testcase
+

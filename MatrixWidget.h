@@ -19,5 +19,6 @@ public slots:
     void rowChangedSlot(int rows);
     void columnChangedSlot(int columns);
     void duplicateCellValue(int row, int column);
+    void setMatrix(std::vector<std::vector<int>> matrix);
 };
 

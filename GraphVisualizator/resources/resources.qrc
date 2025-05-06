@@ -1,6 +1,0 @@
-<RCC>
-    <qresource prefix="/RC">
-        <file>Vis.png</file>
-        <file>load.png</file>
-    </qresource>
-</RCC>

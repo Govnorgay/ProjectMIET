@@ -1,5 +1,4 @@
 #include "mainwindow.h"
-#include "QIcon"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -92,12 +91,13 @@ void MainWindow::init(){
     connect(rowOfMatrixBox,    SIGNAL(valueChanged(int)), workField, SLOT(setRowsCountSlot(int)));
     connect(columnOfMatrixBox, SIGNAL(valueChanged(int)), workField, SLOT(setColoumnCountSlot(int)));
 
-    connect(workField,      SIGNAL(algroFinished()), this,    SLOT(changeButtonsValue()));
     connect(startAlgBtn1,   SIGNAL(clicked(bool)), this,      SLOT(setStartLastItems(bool)));
     connect(startAlgBtn2,   SIGNAL(clicked(bool)), this,      SLOT(setStartLastItems(bool)));
     connect(removeGraphBtn, SIGNAL(clicked(bool)), workField, SLOT(clearAllSlot(bool)));
     connect(startAlgBtn1, SIGNAL(clicked(bool)),   workField, SLOT(startDeicstraAlgo(bool)));
     connect(startAlgBtn2, SIGNAL(clicked(bool)),   workField, SLOT(startAStarAlgo(bool)));
+    connect(saveBtn,      SIGNAL(clicked(bool)),   this,      SLOT(saveMatrixToFile(bool)));
+    connect(loadBtn,      SIGNAL(clicked(bool)),   this,      SLOT(readMatrixFromFile(bool)));
 
     QWidget *centralWidget = new QWidget(this);
     centralWidget->setLayout(mainLayout);
@@ -142,15 +142,68 @@ std::vector<std::vector<int>> MainWindow::getMatrixFromTable() {
     return matrix;
 }
 
-void MainWindow::changeButtonsValue(){
-    startAlgBtn1->setEnabled(!startAlgBtn1->isEnabled());
-    startAlgBtn2->setEnabled(!startAlgBtn2->isEnabled());
-    loadBtn->setEnabled(!loadBtn->isEnabled());
-    removeGraphBtn->setEnabled(!removeGraphBtn->isEnabled());
-    setMatrixBtn->setEnabled(!setMatrixBtn->isEnabled());
+void MainWindow::readMatrixFromFile(bool) {
+    std::vector<std::vector<int>> matrix;
+
+    QString fname = QFileDialog::getOpenFileName(this, "Выберите файл с матрицей", "", "All ();;Text files (*.txt)", 0, QFileDialog::DontUseNativeDialog);
+    QFile file(fname);
+
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QMessageBox::warning(this, "Ошибка", "Не удалось открыть файл для чтения");
+        return;
+    }
+
+    QTextStream in(&file);
+    while (!in.atEnd()) {
+        QString line = in.readLine().trimmed();
+        if (line.isEmpty()) continue;
+
+        QStringList elements = line.split(' ', Qt::SkipEmptyParts);
+        std::vector<int> row;
+
+        for (const QString& elem : elements) {
+            bool ok;
+            int value = elem.toInt(&ok);
+            if (!ok) {
+                QMessageBox::warning(this, "Ошибка",
+                    "Обнаружено некорректное значение в матрице: " + elem);
+                file.close();
+                return;
+            }
+            row.push_back(value);
+        }
+
+        matrix.push_back(row);
+    }
+    matrixWidget->setMatrix(matrix);
+    rowOfMatrixBox->setValue(matrix.size());
+    columnOfMatrixBox->setValue(matrix.size());
+
+    file.close();
 }
 
-void MainWindow::setStartLastItems(bool){
-    changeButtonsValue();
+void MainWindow::saveMatrixToFile(bool){
+    std::vector<std::vector<int>> matrix = getMatrixFromTable();
+    QString fname = QFileDialog::getSaveFileName(nullptr, "matrix", ".", "Text files (*.txt)" );
+
+        QFile file(fname);
+        if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            return;
+        }
+
+        QTextStream out(&file);
+
+        for (const auto& row : matrix) {
+            QStringList rowElements;
+            for (int val : row) {
+                rowElements << QString::number(val);
+            }
+            out << rowElements.join(" ") << "\n";
+        }
+
+        file.close();
+}
+
+void MainWindow::setStartLastItems(bool){       
     workField->setStartItems(algFirstNode->currentText(), algSecondNode->currentText());
 }

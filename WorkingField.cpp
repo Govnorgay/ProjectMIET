@@ -8,7 +8,6 @@
 #include <queue>
 #include <unordered_map>
 #include <QDebug>
-#include <QThread>
 
 WorkingField::WorkingField(QWidget *parent) : QGraphicsView(parent){
 
@@ -173,10 +172,8 @@ void WorkingField::startDeicstraAlgo(bool) {
     CustomEclipseItem* startItem = firstLastItems.first;
     CustomEclipseItem* endItem = firstLastItems.second;
 
-    if (!startItem || !endItem){
-        emit algroFinished();
+    if (!startItem || !endItem)
         return;
-    }
 
 
     // Структура для хранения расстояний
@@ -204,6 +201,7 @@ void WorkingField::startDeicstraAlgo(bool) {
         current->setBrush(Qt::yellow);
         queue.pop();
 
+        // Если достигли конечной вершины, завершаем алгоритм
         if (current == endItem) {
             break;
         }
@@ -222,23 +220,20 @@ void WorkingField::startDeicstraAlgo(bool) {
     }
 
     // Восстановление пути
-    if (distances[endItem] == std::numeric_limits<double>::infinity()){
-        emit algroFinished();
+    if (distances[endItem] == std::numeric_limits<double>::infinity())
         return;
-    }
 
     std::vector<CustomEclipseItem*> path;
     for (CustomEclipseItem* current = endItem; current != nullptr; current = predecessors[current]) {
         path.push_back(current);
     }
     std::reverse(path.begin(), path.end());
-
+    lastFoundPath = path;
     // Вывод пути
     for (auto item : path) {
         item->setBrush(Qt::green);
         delay();
     }
-    emit algroFinished();
 }
 
 void WorkingField::startAStarAlgo(bool) {
@@ -248,12 +243,13 @@ void WorkingField::startAStarAlgo(bool) {
     CustomEclipseItem* endItem = firstLastItems.second;
 
     if (!startItem || !endItem) {
-        emit algroFinished();
+        qDebug() << "Start or end item not set!";
         return;
     }
 
     // Инициализация цветов
     resetAllItemsColor();
+    startItem->setBrush(Qt::green);
     delay();
 
     // Эвристическая функция на основе минимального веса ребра
@@ -306,8 +302,11 @@ void WorkingField::startAStarAlgo(bool) {
         if (!current || closedSet[current]) continue;
         closedSet[current] = true;
 
-        current->setBrush(Qt::yellow);
-        delay();
+        // Безопасная установка цвета
+        if (current->scene()) {
+            current->setBrush(Qt::yellow);
+            delay();
+        }
 
         if (current == endItem) {
             break;
@@ -335,12 +334,16 @@ void WorkingField::startAStarAlgo(bool) {
                 }
             }
         }
+
+        if (current->scene()) {
+            current->setBrush(Qt::darkYellow);
+            delay();
+        }
     }
 
     // Восстановление пути с проверкой
     if (gScore[endItem] == std::numeric_limits<double>::infinity()) {
         qDebug() << "Path not found!";
-        emit algroFinished();
         return;
     }
 
@@ -354,6 +357,7 @@ void WorkingField::startAStarAlgo(bool) {
         path.push_back(startItem);
     }
     std::reverse(path.begin(), path.end());
+    lastFoundPath = path;
 
     // Визуализация пути
     for (auto item : path) {
@@ -361,7 +365,14 @@ void WorkingField::startAStarAlgo(bool) {
         item->setBrush(Qt::green);
         delay();
     }
-    emit algroFinished();
+
+    // Выделяем начало и конец
+    if (startItem->scene()) {
+        startItem->setBrush(Qt::darkGreen);
+    }
+    if (endItem->scene()) {
+        endItem->setBrush(Qt::darkGreen);
+    }
 }
 
 void WorkingField::resetAllItemsColor() {
@@ -401,7 +412,8 @@ QStringList WorkingField::getNodesNames(){
 
 void WorkingField::delay()
 {
-    QTime dieTime= QTime::currentTime().addMSecs(1500);
+
+    QTime dieTime= QTime::currentTime().addMSecs(150);
     while (QTime::currentTime() < dieTime)
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }
