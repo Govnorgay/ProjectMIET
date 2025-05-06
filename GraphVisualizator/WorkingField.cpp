@@ -173,10 +173,8 @@ void WorkingField::startDeicstraAlgo(bool) {
     CustomEclipseItem* startItem = firstLastItems.first;
     CustomEclipseItem* endItem = firstLastItems.second;
 
-    if (!startItem || !endItem){
-        emit algroFinished();
+    if (!startItem || !endItem)
         return;
-    }
 
 
     // Структура для хранения расстояний
@@ -204,6 +202,7 @@ void WorkingField::startDeicstraAlgo(bool) {
         current->setBrush(Qt::yellow);
         queue.pop();
 
+        // Если достигли конечной вершины, завершаем алгоритм
         if (current == endItem) {
             break;
         }
@@ -222,10 +221,8 @@ void WorkingField::startDeicstraAlgo(bool) {
     }
 
     // Восстановление пути
-    if (distances[endItem] == std::numeric_limits<double>::infinity()){
-        emit algroFinished();
+    if (distances[endItem] == std::numeric_limits<double>::infinity())
         return;
-    }
 
     std::vector<CustomEclipseItem*> path;
     for (CustomEclipseItem* current = endItem; current != nullptr; current = predecessors[current]) {
@@ -234,11 +231,12 @@ void WorkingField::startDeicstraAlgo(bool) {
     std::reverse(path.begin(), path.end());
 
     // Вывод пути
+    qDebug() << "Path from" << startItem->getItemName() << "to" << endItem->getItemName() << ":";
     for (auto item : path) {
+        qDebug() << item->getItemName();
         item->setBrush(Qt::green);
         delay();
     }
-    emit algroFinished();
 }
 
 void WorkingField::startAStarAlgo(bool) {
@@ -248,12 +246,13 @@ void WorkingField::startAStarAlgo(bool) {
     CustomEclipseItem* endItem = firstLastItems.second;
 
     if (!startItem || !endItem) {
-        emit algroFinished();
+        qDebug() << "Start or end item not set!";
         return;
     }
 
     // Инициализация цветов
     resetAllItemsColor();
+    startItem->setBrush(Qt::green);
     delay();
 
     // Эвристическая функция на основе минимального веса ребра
@@ -306,8 +305,11 @@ void WorkingField::startAStarAlgo(bool) {
         if (!current || closedSet[current]) continue;
         closedSet[current] = true;
 
-        current->setBrush(Qt::yellow);
-        delay();
+        // Безопасная установка цвета
+        if (current->scene()) {
+            current->setBrush(Qt::yellow);
+            delay();
+        }
 
         if (current == endItem) {
             break;
@@ -335,12 +337,16 @@ void WorkingField::startAStarAlgo(bool) {
                 }
             }
         }
+
+        if (current->scene()) {
+            current->setBrush(Qt::darkYellow);
+            delay();
+        }
     }
 
     // Восстановление пути с проверкой
     if (gScore[endItem] == std::numeric_limits<double>::infinity()) {
         qDebug() << "Path not found!";
-        emit algroFinished();
         return;
     }
 
@@ -356,12 +362,21 @@ void WorkingField::startAStarAlgo(bool) {
     std::reverse(path.begin(), path.end());
 
     // Визуализация пути
+    qDebug() << "A* Path from" << startItem->getItemName() << "to" << endItem->getItemName() << ":";
     for (auto item : path) {
         if (!item || !item->scene()) continue;
+        qDebug() << item->getItemName();
         item->setBrush(Qt::green);
         delay();
     }
-    emit algroFinished();
+
+    // Выделяем начало и конец
+    if (startItem->scene()) {
+        startItem->setBrush(Qt::darkGreen);
+    }
+    if (endItem->scene()) {
+        endItem->setBrush(Qt::darkGreen);
+    }
 }
 
 void WorkingField::resetAllItemsColor() {

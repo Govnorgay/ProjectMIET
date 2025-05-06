@@ -49,7 +49,6 @@ private:
     void init();
     std::vector<std::vector<int>>getMatrixFromTable();
 private slots:
-    void changeButtonsValue();
     void setNodesLists(bool);
     void transferMatrixSlot(bool);
     void setStartLastItems(bool);

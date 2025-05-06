@@ -92,7 +92,6 @@ void MainWindow::init(){
     connect(rowOfMatrixBox,    SIGNAL(valueChanged(int)), workField, SLOT(setRowsCountSlot(int)));
     connect(columnOfMatrixBox, SIGNAL(valueChanged(int)), workField, SLOT(setColoumnCountSlot(int)));
 
-    connect(workField,      SIGNAL(algroFinished()), this,    SLOT(changeButtonsValue()));
     connect(startAlgBtn1,   SIGNAL(clicked(bool)), this,      SLOT(setStartLastItems(bool)));
     connect(startAlgBtn2,   SIGNAL(clicked(bool)), this,      SLOT(setStartLastItems(bool)));
     connect(removeGraphBtn, SIGNAL(clicked(bool)), workField, SLOT(clearAllSlot(bool)));
@@ -142,15 +141,6 @@ std::vector<std::vector<int>> MainWindow::getMatrixFromTable() {
     return matrix;
 }
 
-void MainWindow::changeButtonsValue(){
-    startAlgBtn1->setEnabled(!startAlgBtn1->isEnabled());
-    startAlgBtn2->setEnabled(!startAlgBtn2->isEnabled());
-    loadBtn->setEnabled(!loadBtn->isEnabled());
-    removeGraphBtn->setEnabled(!removeGraphBtn->isEnabled());
-    setMatrixBtn->setEnabled(!setMatrixBtn->isEnabled());
-}
-
-void MainWindow::setStartLastItems(bool){
-    changeButtonsValue();
+void MainWindow::setStartLastItems(bool){       
     workField->setStartItems(algFirstNode->currentText(), algSecondNode->currentText());
 }

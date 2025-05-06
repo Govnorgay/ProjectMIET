@@ -63,12 +63,12 @@ public slots:
     void setColoumnCountSlot(int column){ columnCount = column;}
     void startDeicstraAlgo(bool);
     void startAStarAlgo(bool);
-signals:
-    void algroFinished();
+
  public:
     QStringList getNodesNames();
     void setMatrixInfo(std::vector<std::vector<int>> matrix);
     void setStartItems(QString item1, QString item2);
+
 
 };
 
