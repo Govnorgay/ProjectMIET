@@ -413,7 +413,7 @@ QStringList WorkingField::getNodesNames(){
 void WorkingField::delay()
 {
 
-    QTime dieTime= QTime::currentTime().addMSecs(150);
+    QTime dieTime= QTime::currentTime().addMSecs(3000);
     while (QTime::currentTime() < dieTime)
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
 }

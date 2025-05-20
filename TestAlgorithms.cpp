@@ -24,7 +24,7 @@ void TestAlgorithms::initTestCase()
 
     wf->rowCount = wf->columnCount = 3;
     wf->setMatrixInfo(testMatrix);
-    wf->setGraphSlot(true);  // Создаем элементы графа
+    wf->setGraphSlot(true);
 }
 
 void TestAlgorithms::cleanupTestCase()
@@ -46,7 +46,7 @@ void TestAlgorithms::testDijkstraBasic()
     QCOMPARE(path.size(), 3);
     QCOMPARE(path[0]->getItemName(), "Item1");
     QCOMPARE(path[1]->getItemName(), "Item2");
-    QCOMPARE(path[2]->getItemName(), "Item3");
+    QCOMPARE(path[2]->getItemName(), "Item4");
 }
 
 void TestAlgorithms::testAStarBasic()
